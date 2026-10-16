@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mahjong Cuties</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap">
+<style>
+:root{--bg1:#4a1f8f;--bg2:#1a0d3d;--bg3:#8a2a8f;--text:#fff0fa;--soft:#e9b8e0;--pink:#ff4fa0;--side1:#ff9ccc;--side2:#b02a78;--btn:#3f1f78;--shadow:rgba(8,0,25,.65);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg2);background-image:radial-gradient(circle at 20% 10%,var(--bg1),transparent 55%),radial-gradient(circle at 85% 90%,var(--bg3),transparent 60%),linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:auto,auto,28px 28px,28px 28px;color:var(--text);font-family:Fredoka,"Trebuchet MS",system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+header{display:flex;justify-content:space-between;align-items:center;padding:10px 18px 2px}
+h1{margin:0;font-size:24px;font-weight:600}
+.stats{display:flex;gap:8px;font-size:15px}
+.stats span{background:var(--btn);padding:4px 12px;border-radius:999px;box-shadow:0 2px 0 var(--side1)}
+.stats b{font-weight:600;font-variant-numeric:tabular-nums}
+main{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
+#board{position:relative}
+#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5000}
+.t{position:absolute;width:calc(var(--tw)*.9);height:calc(var(--tw)*1.2);font-size:var(--tw);border-radius:.22em;
+background:linear-gradient(160deg,var(--l),var(--c));cursor:pointer;
+box-shadow:.05em .05em 0 var(--d1),.1em .1em 0 var(--d2),.12em .15em .15em .01em var(--shadow);
+transition:filter .2s,transform .15s,opacity .25s}
+.t::after{content:"";position:absolute;left:.06em;top:.04em;width:.22em;height:.06em;border-radius:.1em;background:rgba(255,255,255,.75);transform:rotate(-12deg)}
+.f{position:absolute;inset:.17em;background:#fffaf2;border-radius:.3em;box-shadow:inset 0 .05em .09em rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;font-size:.52em;line-height:1;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;padding-bottom:.06em}
+.t.blocked{filter:brightness(.55) saturate(.7);cursor:default}
+.t.sel{transform:translate(-.03em,-.06em);box-shadow:0 0 0 .05em #fff,.1em .1em 0 var(--d2),0 0 .6em .15em rgba(255,255,255,.75);animation:wig .5s ease-in-out infinite}
+.t.hint{animation:hint .5s ease-in-out 3}
+.t.gone{opacity:0;transform:scale(.6) translateY(-.2em);pointer-events:none}
+.t.shake{animation:shake .25s}
+@keyframes wig{50%{transform:translate(-.03em,-.06em) rotate(2.5deg)}}
+@keyframes hint{50%{box-shadow:0 0 0 .06em #ffd36b,0 0 .7em .2em #ffd36b,.1em .1em 0 var(--side2)}}
+@keyframes shake{25%{transform:translateX(-.04em)}75%{transform:translateX(.04em)}}
+footer{display:flex;gap:8px;justify-content:center;padding:8px 12px 16px}
+button{font:inherit;font-size:13px;color:var(--text);background:var(--btn);border:0;border-radius:18px;padding:8px 6px;min-width:72px;min-height:56px;box-shadow:0 3px 0 var(--side2);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+button span{font-size:20px;line-height:1}
+button:active{transform:translateY(3px);box-shadow:0 0 0 var(--side2)}
+button:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+button:disabled{opacity:.45}
+button.pulse{animation:pl .7s ease-in-out 5}
+@keyframes pl{50%{background:#ffd6e8;transform:scale(1.08)}}
+#toast{position:absolute;top:6px;left:50%;transform:translateX(-50%);background:var(--btn);padding:7px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;box-shadow:0 2px 0 var(--side2);z-index:6000}
+#toast.on{opacity:1}
+#win{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(20,5,45,.7);backdrop-filter:blur(3px);z-index:9999}
+#win.on{display:flex}
+#win div{text-align:center;padding:26px 30px;border-radius:28px;background:var(--btn);box-shadow:0 6px 0 var(--side2)}
+#win h2{margin:0 0 4px;font-size:28px}
+#win p{margin:0 0 16px;color:var(--soft)}
+#win button{flex-direction:row;margin:auto;padding:10px 22px;min-height:0;font-size:16px;background:var(--pink);color:#fff}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.stats span.warn{background:#ff4a4a;color:#fff;animation:pl .6s ease-in-out infinite}
+.t.pop{animation:pop .4s backwards}
+.t.flip{animation:flip .45s}
+@keyframes pop{from{transform:scale(0) rotate(-25deg);opacity:0}70%{transform:scale(1.15)}}
+@keyframes flip{50%{transform:scale(.6) rotateY(90deg)}}
+.t.snake{box-shadow:.05em .05em 0 var(--d1),.1em .1em 0 var(--d2),0 0 .6em .14em #b8ff5a;animation:snk .3s ease-in-out infinite}
+@keyframes snk{50%{transform:rotate(-5deg) scale(1.07)}}
+.snake .bar{position:absolute;left:.04em;right:.04em;bottom:-.19em;height:.08em;border-radius:.1em;background:#ffe14d;box-shadow:0 0 .2em #ffe14d;transform-origin:left;animation:drain 3s linear forwards}
+@keyframes drain{to{transform:scaleX(0)}}
+.snake .num{position:absolute;top:-.16em;right:-.14em;width:1.2em;height:1.2em;line-height:1.2em;text-align:center;border-radius:50%;background:#ff3b5c;color:#fff;font-size:.28em;font-weight:600;font-style:normal;box-shadow:0 .1em 0 #a01030}
+.t.gone{animation:none}
+.slither{position:absolute;top:38%;left:0;font-size:68px;z-index:5500;pointer-events:none;animation:sl 1.2s ease-in forwards}
+@keyframes sl{from{transform:translateX(-90px)}50%{transform:translateX(40vw) translateY(-26px) rotate(-10deg)}to{transform:translateX(115vw) translateY(12px)}}
+#cheer{position:absolute;left:50%;top:9%;transform:translateX(-50%);opacity:0;background:linear-gradient(90deg,#ff4fa0,#ff9a3d);color:#fff;font-weight:600;font-size:clamp(20px,6vw,30px);padding:10px 22px;border-radius:999px;box-shadow:0 4px 0 #b02a78,0 0 30px rgba(255,79,160,.6);white-space:nowrap;pointer-events:none;z-index:7000}
+#cheer.on{opacity:1;animation:cheer 1.7s ease both}
+@keyframes cheer{0%{opacity:0;transform:translateX(-50%) scale(.5)}15%{opacity:1;transform:translateX(-50%) scale(1.12)}25%,80%{opacity:1;transform:translateX(-50%) scale(1)}100%{opacity:0;transform:translateX(-50%) translateY(-14px) scale(.95)}}
+</style></head>
+<body>
+<header><h1>🎀 Mahjong Cuties</h1>
+<div class="stats"><span>🧸 <b id="left">72</b></span><span id="tspan">⏱ <b id="time">4:00</b></span></div></header>
+<main><div id="board"></div><canvas id="fx"></canvas><div id="toast"></div><div id="cheer"></div>
+<div id="win"><div><h2 id="wt"></h2><p id="winmsg"></p><button id="again">Play again</button></div></div></main>
+<footer><button id="hint"><span>💡</span>Hint</button><button id="new"><span>✨</span>New game</button></footer>
+<script>
+const $=s=>document.querySelector(s),R=n=>Math.floor(Math.random()*n);
+const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=R(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+const POS=[];
+[[0,2,5],[1,1,6],[2,0,7],[3,0,7],[4,0,7],[5,0,7],[6,1,6],[7,2,5]].forEach(([y,a,b])=>{for(let x=a;x<=b;x++)POS.push({x,y,z:0})});
+[[2,5,2,5,1],[3,4,3,4,2]].forEach(([y0,y1,x0,x1,z])=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)POS.push({x,y,z})});
+const EMO=['🌸','🍓','🧁','🦄','🌈','⭐','💖','🍑','🐰','🐱','🍭','🎀','🦋','🍒','🍩','🌷','🧸','🍉'];
+const PAL=[['#ff4d94','#ff9ec6','#c72a6b','#8f1a4c'],['#ff8a2b','#ffc08a','#c75d10','#8a3d08'],['#ffcf2e','#ffe98f','#c79a0a','#8a6a05'],['#3fd36a','#9cf0b5','#1f9c46','#126a2d'],['#22cfc4','#8ef0e9','#0f968c','#0a6660'],['#3aa0ff','#9ccfff','#1f6fc7','#144a8a'],['#9a6bff','#c9b0ff','#6338c7','#40208a'],['#ff4a4a','#ff9a9a','#c42222','#8a1414'],['#d65cff','#eeb0ff','#9a2fc7','#6a1c8a']];
+const SNK=['#8bd62f','#d3f58a','#4e9a12','#2f6a08'];
+const MSG=['Momo loves me 💕','You are doing amazing! ✨','So clever! 🌸','Sparkly work! 💖','Unstoppable! 🦄','Yay, keep going! 🎀','Cutie with a plan! 🍓','Momo is so proud of you 🐱'];
+const TOTAL=240;
+function isFree(p,set){let L=0,Rt=0;for(const o of set){if(o===p)continue;const dx=o.x-p.x,dy=Math.abs(o.y-p.y);
+ if(o.z===p.z+1&&Math.abs(dx)<1&&dy<1)return false;
+ if(o.z===p.z&&dy<1){if(dx<-.01&&dx>-1.01)L=1;if(dx>.01&&dx<1.01)Rt=1}}
+ return !(L&&Rt)}
+function pairsOf(keys){const g={};keys.forEach(k=>(g[k]=g[k]||[]).push(k));const ps=[];
+ Object.values(g).forEach(a=>{for(let i=0;i+1<a.length;i+=2)ps.push([a[i],a[i+1]])});return shuf(ps)}
+function solve(pos,keys){
+ for(let n=0;n<300;n++){
+  let rem=pos.slice(),ps=pairsOf(keys),out=[],ok=true;
+  while(rem.length){
+   const fr=rem.filter(p=>isFree(p,rem));
+   if(fr.length<2){ok=false;break}
+   const a=fr.splice(R(fr.length),1)[0],b=fr[R(fr.length)],[ka,kb]=ps.pop();
+   out.push([a,ka],[b,kb]);rem=rem.filter(p=>p!==a&&p!==b)}
+  if(ok)return out}
+ return null}
+let tiles=[],sel=null,secs=TOTAL,matches=0,cheers=0,started=false,over=false,tickIv=0,snake=[],snIv=0,snTO=0,tw=44;
+const board=$('#board'),cv=$('#fx'),cx=cv.getContext('2d');
+const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+function show(){$('#time').textContent=fmt(Math.max(secs,0));$('#tspan').classList.toggle('warn',secs<=30)}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2200)}
+/* fireworks */
+let P=[],raf=0;const COL=['#ff5fa2','#ffb3d1','#ffd36b','#b69cff','#7fdcff','#ff8fb8','#fff'];
+function sizeFx(){const r=$('main').getBoundingClientRect(),d=devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;cx.setTransform(d,0,0,d,0,0)}
+function burst(x,y,n=20){if(reduce)return;
+ for(let i=0;i<n;i++){const a=Math.PI*2*i/n+Math.random()*.4,s=1.4+Math.random()*3;
+  P.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:1,c:COL[R(COL.length)],r:2+Math.random()*2.5,s:Math.random()<.35})}
+ if(!raf)raf=requestAnimationFrame(loop)}
+function loop(){cx.clearRect(0,0,9999,9999);P=P.filter(p=>p.l>0);
+ for(const p of P){p.x+=p.vx;p.y+=p.vy;p.vy+=.07;p.vx*=.98;p.l-=.02;cx.globalAlpha=Math.max(p.l,0);cx.fillStyle=p.c;
+  if(p.s){cx.font=(p.r*4.5)+'px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('✦',p.x,p.y)}
+  else{cx.beginPath();cx.arc(p.x,p.y,p.r*p.l+.5,0,7);cx.fill()}}
+ cx.globalAlpha=1;raf=P.length?requestAnimationFrame(loop):0}
+function burstAt(el){const r=el.getBoundingClientRect(),c=cv.getBoundingClientRect();burst(r.left+r.width/2-c.left,r.top+r.height/2-c.top)}
+/* tiles */
+function place(t){const s=tw*.1,e=t.el;e.style.left=(t.x*tw+(2-t.z)*s)+'px';e.style.top=(t.y*1.3*tw+(2-t.z)*s)+'px';e.style.zIndex=t.z*1000+t.y*20+t.x+(t.snake?500:0)}
+function paint(t){const c=t.snake?SNK:PAL[EMO.indexOf(t.k)%9];
+ ['--c','--l','--d1','--d2'].forEach((v,i)=>t.el.style.setProperty(v,c[i]));
+ t.el.innerHTML=`<div class="f">${t.k}</div>`+(t.snake?'<i class="bar"></i><b class="num">3</b>':'')}
+function mk(t){const e=document.createElement('div');e.className='t'+(t.snake?' snake':'');t.el=e;paint(t);e.onclick=()=>click(t);board.appendChild(e);place(t)}
+function fit(){const m=$('main').getBoundingClientRect();
+ tw=Math.max(24,Math.floor(Math.min((m.width-14)/8.3,(m.height-14)/(8*1.3+.4))));
+ const s=tw*.1;document.documentElement.style.setProperty('--tw',tw+'px');
+ board.style.width=(8*tw+2*s)+'px';board.style.height=(8*1.3*tw+2*s)+'px';
+ tiles.forEach(t=>t.alive&&place(t));sizeFx()}
+const alive=()=>tiles.filter(t=>t.alive),real=()=>alive().filter(t=>!t.snake);
+function findPair(){const g={};for(const t of real().filter(t=>t.free)){if(g[t.k])return[g[t.k],t];g[t.k]=t}return null}
+function refresh(){const a=alive();a.forEach(t=>{t.free=isFree(t,a);t.el.classList.toggle('blocked',!t.free);t.el.classList.remove('hint')});
+ $('#left').textContent=real().length}
+function newGame(){
+ clearInterval(tickIv);clearInterval(snIv);clearTimeout(snTO);
+ const keys=[];EMO.forEach(k=>{for(let i=0;i<4;i++)keys.push(k)});
+ const out=solve(POS.map(p=>({...p})),keys);
+ tiles=out.map(([p,k])=>({k,x:p.x,y:p.y,z:p.z,alive:true}));
+ sel=null;snake=[];secs=TOTAL;matches=0;cheers=0;started=false;over=false;
+ $('#win').classList.remove('on');$('.slither')?.remove();show();
+ board.innerHTML='';tiles.forEach(mk);fit();refresh()}
+function start(){started=true;
+ tickIv=setInterval(()=>{secs--;show();if(secs<=0)end(false)},1000);
+ snTO=setTimeout(spawnSnake,12000+R(8000))}
+function sched(){clearTimeout(snTO);if(!over)snTO=setTimeout(spawnSnake,16000+R(12000))}
+function click(t){
+ if(over||!t.alive)return;
+ if(!started)start();
+ if(!t.free){t.el.classList.remove('shake');void t.el.offsetWidth;t.el.classList.add('shake');return}
+ if(sel===t){t.el.classList.remove('sel');sel=null;return}
+ if(sel&&sel.k===t.k){const a=sel;a.el.classList.remove('sel');sel=null;
+  [a,t].forEach(x=>{burstAt(x.el);x.alive=false;x.el.classList.add('gone');setTimeout(()=>x.el.remove(),260)});
+  if(a.snake){clearInterval(snIv);snake=[];secs+=5;show();toast('Snakes matched! +5 seconds 🐍✨');sched();refresh();check();return}
+  matches++;refresh();check();if(!over&&matches%5===0)cheer();return}
+ if(sel)sel.el.classList.remove('sel');
+ sel=t;t.el.classList.add('sel')}
+function check(){
+ if(!real().length){end(true);return}
+ if(!findPair())swirl()}
+/* always winnable: re-deal faces of remaining tiles into a solvable order */
+function swirl(){
+ const r=real();if(r.length<2)return;
+ const out=solve(r.map(t=>({x:t.x,y:t.y,z:t.z,t})),r.map(t=>t.k));if(!out)return;
+ if(sel){sel.el.classList.remove('sel');sel=null}
+ out.forEach(([p,k])=>{p.t.k=k;paint(p.t);p.t.el.classList.add('flip')});
+ setTimeout(()=>r.forEach(t=>t.el.classList.remove('flip')),500);
+ refresh();toast('Tiles swirled! 🌀 Keep going');
+ if(!findPair()&&!snake.length)setTimeout(swirl,600)}
+/* snake */
+function empties(){const occ=new Set(alive().map(t=>t.x+','+t.y+','+t.z));
+ return POS.filter(p=>!occ.has(p.x+','+p.y+','+p.z)&&(p.z===0||POS.filter(q=>q.z===p.z-1&&Math.abs(q.x-p.x)<1&&Math.abs(q.y-p.y)<1).every(q=>occ.has(q.x+','+q.y+','+q.z))))}
+function clearSnakes(){snake.forEach(t=>{t.alive=false;t.el.classList.add('gone');setTimeout(()=>t.el.remove(),260)});if(sel&&sel.snake)sel=null;snake=[]}
+function spawnSnake(){
+ if(over||snake.length)return;
+ const al=alive(),cs=shuf(empties());let c1,c2;
+ for(const a of cs){const n1={...a};if(!isFree(n1,al.concat(n1)))continue;
+  for(const b of cs){if(b===a)continue;const n2={...b},all=al.concat(n1,n2);if(isFree(n1,all)&&isFree(n2,all)){c1=a;c2=b;break}}
+  if(c1)break}
+ if(!c1||real().length<12){snTO=setTimeout(spawnSnake,4000);return}
+ snake=[c1,c2].map(c=>{const t={k:'🐍',snake:true,x:c.x,y:c.y,z:c.z,alive:true};tiles.push(t);mk(t);return t});
+ refresh();toast('🐍🐍 Match the two snakes! 3 seconds!');
+ const dl=Date.now()+3000;
+ snIv=setInterval(()=>{const r=dl-Date.now();snake.forEach(t=>{const n=t.el.querySelector('.num');if(n)n.textContent=Math.max(1,Math.ceil(r/1000))});if(r<=0)bite()},150)}
+function bite(){clearInterval(snIv);clearSnakes();
+ const sl=document.createElement('div');sl.className='slither';sl.textContent='🐍';$('main').appendChild(sl);setTimeout(()=>sl.remove(),1300);
+ const add=[];for(let i=0;i<10;i++){const c=shuf(empties())[0];if(!c)break;const n={x:c.x,y:c.y,z:c.z,alive:true};tiles.push(n);add.push(n)}
+ if(add.length%2){tiles.splice(tiles.indexOf(add.pop()),1)}
+ for(let i=0;i<add.length;i+=2){const k=EMO[R(EMO.length)];add[i].k=k;add[i+1].k=k}
+ add.forEach((n,i)=>{mk(n);n.el.classList.add('pop');n.el.style.animationDelay=(250+i*70)+'ms';setTimeout(()=>n.el.classList.remove('pop'),1200+i*70)});
+ refresh();toast(`🐍 Oh no! ${add.length} new tiles!`);sched();check()}
+/* cheer + end */
+function cheer(){const m=cheers++?MSG[R(MSG.length)]:MSG[0],c=$('#cheer');
+ c.textContent=m;c.classList.remove('on');void c.offsetWidth;c.classList.add('on');clearTimeout(cheer.h);cheer.h=setTimeout(()=>c.classList.remove('on'),1800);
+ const b=cv.getBoundingClientRect();[0,1,2].forEach(i=>setTimeout(()=>burst(b.width*(.2+Math.random()*.6),b.height*(.08+Math.random()*.2),18),i*150))}
+function end(win){over=true;clearInterval(tickIv);clearInterval(snIv);clearTimeout(snTO);
+ if(sel){sel.el.classList.remove('sel');sel=null}
+ snake.forEach(t=>{t.alive=false;t.el.remove()});snake=[];
+ if(win){$('#wt').textContent='You did it! 🎉';$('#winmsg').textContent=`Cleared with ${fmt(Math.max(secs,0))} to spare`;
+  const c=cv.getBoundingClientRect();for(let i=0;i<7;i++)setTimeout(()=>burst(c.width*(.15+Math.random()*.7),c.height*(.15+Math.random()*.6),30),i*220)}
+ else{$('#wt').textContent="Time's up! ⏰";$('#winmsg').textContent=`${real().length} tiles left. So close!`}
+ setTimeout(()=>$('#win').classList.add('on'),win?600:300)}
+$('#hint').onclick=()=>{if(over)return;let p=findPair();if(!p&&snake.length)p=snake.slice();if(!p)return swirl();
+ p.forEach(t=>{t.el.classList.remove('hint');void t.el.offsetWidth;t.el.classList.add('hint')})};
+$('#new').onclick=newGame;$('#again').onclick=newGame;
+addEventListener('resize',fit);
+newGame();
+</script></body></html>
